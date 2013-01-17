@@ -1,0 +1,64 @@
+C51 COMPILER V7.06   MAIN                                                                  03/28/2009 13:04:58 PAGE 1   
+
+
+C51 COMPILER V7.06, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN main.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE main.c BROWSE DEBUG OBJECTEXTEND
+
+stmt level    source
+
+   1          #include "at89x52.h"
+   2          #include "intrins.h"
+   3          #include "uart.h"
+   4          
+   5          #define uchar unsigned char
+   6          #define uint unsigned int
+   7          #define nop _nop_()
+   8          
+   9          void MyDelay(uint tm);
+  10          
+  11          void main(){
+  12   1              uchar i;
+  13   1              uchar Mood[8];
+  14   1              InitUART();//init uart to be use
+  15   1              SendStrUART("Uart Ready!");
+  16   1              SendByteUART(0x0D);
+  17   1              SendByteUART(0x0A);
+  18   1              for(i=0;i<8;i++){
+  19   2                      SendStrUART("Give me Mood[");
+  20   2                      SendByteUART('0'+i);
+  21   2                      SendByteUART(']');
+  22   2                      SendByteUART(0x0D);
+  23   2                      SendByteUART(0x0A);
+  24   2                      Mood[i]=ReciveByteUART();
+  25   2              }
+  26   1              SendStrUART("Show Mood!");
+  27   1              while(1){
+  28   2                      for(i=0;i<8;i++){
+  29   3                              P2=0xFF;
+  30   3                              P0=Mood[i];
+  31   3                              P2=~(1<<i);
+  32   3                              MyDelay(100);
+  33   3                      }
+  34   2              }
+  35   1      }
+  36          
+  37          void MyDelay(uint tm){
+  38   1              uint i;
+  39   1              for(i=0;i<tm;i++)
+  40   1                      nop;
+  41   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    152    ----
+   CONSTANT SIZE    =     37    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       9
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

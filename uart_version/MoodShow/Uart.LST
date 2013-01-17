@@ -1,0 +1,141 @@
+C51 COMPILER V7.06   UART                                                                  03/28/2009 13:04:58 PAGE 1   
+
+
+C51 COMPILER V7.06, COMPILATION OF MODULE UART
+OBJECT MODULE PLACED IN Uart.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE Uart.c BROWSE DEBUG OBJECTEXTEND
+
+stmt level    source
+
+   1          #include "uart.h"
+   2          
+   3          //**********晶振设定(仅可选择一个)**********//
+   4          //#define CRYSTAL_6M
+   5          #define CRYSTAL_110592
+   6          //#define CRYSTAL_12M
+   7          
+   8          //**********波特率设定(仅可选择一个)**********//
+   9          //#define RATE62500
+  10          //#define RATE19200
+  11          #define RATE9600
+  12          //#define RATE4800
+  13          //#define RATE2400
+  14          //#define RATE1200
+  15          
+  16          #ifdef _HAVE_INIT_UART
+  17          void InitUART(){
+  18   1              TMOD=(TMOD&0x0F)|0x20;//Timer0模式不变，Timer1为8位自动加载(For UART)
+  19   1              #if defined(CRYSTAL_110592)
+  20   1                      #if defined(RATE19200)
+                                      TL1=0xFD;
+                                      TH1=0xFD;
+                                      PCON=0x80;
+                              #elif defined(RATE9600)
+  25   1                              TL1=0xFD;
+  26   1                              TH1=0xFD;
+  27   1                              PCON=0x00;
+  28   1                      #elif defined(RATE4800)
+                                      TL1=0xFA;
+                                      TH1=0xFA;
+                                      PCON=0x00;
+                              #elif defined(RATE2400)
+                                      TL1=0xF4;
+                                      TH1=0xF4;
+                                      PCON=0x00;
+                              #elif defined(RATE1200)
+                                      TL1=0xE8;
+                                      TH1=0xE8;
+                                      PCON=0x00;
+                              #else
+                                      #error Unknow Rate
+                              #endif
+  43   1              #elif defined(CRYSTAL_12M)
+                              #if defined(RATE62500)
+                                      TL1=0xFF;
+                                      TH1=0xFF;
+                                      PCON=0x80;
+                              #elif defined(RATE4800)//可能产生误码
+                                      TL1=0xF3;
+                                      TH1=0xF3;
+                                      PCON=0x80;
+                              #elif defined(RATE2400)
+                                      TL1=0xE6;
+                                      TH1=0xE6;
+                                      PCON=0x80;
+C51 COMPILER V7.06   UART                                                                  03/28/2009 13:04:58 PAGE 2   
+
+                              #elif defined(RATE1200)
+                                      TL1=0xE6;
+                                      TH1=0xE6;
+                                      PCON=0x00;
+                              #else
+                                      #error Unknow Rate
+                              #endif
+                      #elif defined(CRYSTAL_6M)
+                              #if defined(RATE2400)
+                                      TL1=0xF3;
+                                      TH1=0xF3;
+                                      PCON=0x80;
+                              #elif defined(RATE1200)
+                                      TL1=0xF3;
+                                      TH1=0xF3;
+                                      PCON=0x00;
+                              #else
+                                      #error Unknow Rate
+                              #endif
+                      #else
+                              #error Unknow Crystal
+                      #endif
+  78   1              SCON=0x58;
+  79   1              TR1=1;
+  80   1      }
+  81          #endif //end of _HAVE_INIT_UART
+  82          
+  83          #ifdef _HAVE_SENDSTR_UART
+  84          void SendStrUART(char * Str){
+  85   1              while(*Str){
+  86   2                      SBUF=*Str;
+  87   2                      while(TI==0)
+  88   2                              nop;
+  89   2                      TI=0;
+  90   2                      Str++;
+  91   2              }
+  92   1      }
+  93          #endif //end of _HAVE_SENDSTR_UART
+  94          
+  95          #ifdef _HAVE_SENDBYTE_UART
+  96          void SendByteUART(uchar Data){
+  97   1              SBUF=Data;
+  98   1              while(TI==0)
+  99   1                      nop;
+ 100   1              TI=0;
+ 101   1      }
+ 102          #endif //end of _HAVE_SENDBYTE_UART
+ 103          
+ 104          #ifdef _HAVE_RECIVEBYTE_UART
+ 105          uchar ReciveByteUART(){
+ 106   1              uchar tmp;
+ 107   1              while(RI==0)
+ 108   1                      nop;
+ 109   1              tmp=SBUF;
+ 110   1              RI=0;
+ 111   1              return tmp;
+ 112   1      }
+ 113          #endif //end of _HAVE_RECIVEBYTE_UART
+ 114          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+C51 COMPILER V7.06   UART                                                                  03/28/2009 13:04:58 PAGE 3   
+
+   CODE SIZE        =     70    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,818 @@
+C51 COMPILER V7.06   MAIN                                                                  05/22/2009 12:41:49 PAGE 1   
+
+
+C51 COMPILER V7.06, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN main.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE main.c BROWSE DEBUG OBJECTEXTEND
+
+stmt level    source
+
+   1          #include "at89x52.h"
+   2          #include "intrins.h"
+   3          #include "MyFont(ASCII).h"
+   4          #include "MyMood.h"
+   5          #include "Welcome.h"
+   6          
+   7          #define uchar unsigned char
+   8          #define uint unsigned int
+   9          #define nop _nop_()
+  10          
+  11          sbit Key1=P3^0;//按键1
+  12          sbit Key2=P3^1;//按键2
+  13          
+  14          /**********模式对应函数**********/
+  15          void Mode0();//模式0，ASCII(+)(-)
+  16          void Mode1();//模式1，ASCII(随机)
+  17          void Mode2();//模式2，数字图形(随机)
+  18          void Mode3();//模式3，表情图形(随机)
+  19          void Mode4();//模式4，图像图形(随机)
+  20          void Mode5();//模式5，动态图形(+)(-)
+  21          void Mode6();//模式6，动态数字(模式1--一直循环一个)(模式2--一个完成显示下一个)
+  22          void Mode7();//模式7，两帧动画(+)(-)
+  23          void Mode8();//模式8，四帧动画(+)(-)
+  24          void Mode9();//模式9，六帧动画(+)(-)
+  25          void Mode10();//模式10，DIY图形
+  26          void Mode11();//模式11，DIY两帧动画
+  27          void Mode12();//模式12，DIY四帧动画
+  28          void Mode13();//模式13，DIY六帧动画
+  29          void Mode14();//模式14，走迷宫
+  30          void Mode15();//模式15,By 明
+  31          
+  32          //PlayLED相关参数宏
+  33          #define SPEED_LOW               16      //低速，用于N帧动画
+  34          #define SPEED_MEDIUM    12      //中速
+  35          #define SPEED_HIGH              8       //高速，用于图形生成
+  36          
+  37          #define ALWAYSSTAY      0       //一直停留
+  38          #define STAYTIMES       32      //停留32次
+  39          
+  40          /**********通用函数**********/
+  41          uchar GetMode();//获取4bit模式(从4位开关获取)
+  42          uchar PlayLED(const uchar figure[][8],const uchar num,uchar stop,uchar back,uchar drawret,uchar speed,ucha
+             -r staytimes);//用于显示刷新动态图形
+  43          void Refresh(const uchar figure[]);//刷新点阵函数
+  44          void SetupBuf();//通过4位开关获取LED缓冲(4*16次)
+  45          void MyDelay(uint tm);//延时函数
+  46          void DoWelcome();//欢迎函数
+  47          
+  48          /**********迷宫函数**********/
+  49          uchar CanGo(char x,char y);//判断坐标(x,y)是否可以走
+  50          void SolveGo(char x,char y,uchar Last);//获取可行走的方向，参数Last为上次的移动方向
+  51          
+  52          /**********全局变量**********/
+  53          uchar BufferLED[8];//显示缓冲
+  54          uchar PlayBuf[6][8];//DIY动画缓冲
+C51 COMPILER V7.06   MAIN                                                                  05/22/2009 12:41:49 PAGE 2   
+
+  55          uchar code Maze[8]={0x22,0x6A,0x28,0x0F,0xE0,0x0A,0x7A,0x42};//默认迷宫
+  56          uchar Goto[4];//行走方向(用于计算)
+  57          uchar GotoCnt;//记录可行走的方向个数
+  58          uchar Mode;//运行模式
+  59          
+  60          void main(){
+  61   1              MyDelay(1000);//延迟等待电源平稳
+  62   1              TMOD=0x21;//Timer1为8位自动加载(作为随机数产生器)
+  63   1              TCON=0x40;//Timer1启动
+  64   1              DoWelcome();//显示欢迎动画同时获取工作模式
+  65   1              while(1){
+  66   2                      if(Mode==0){//模式0，ASCII(+)(-)
+  67   3                              Mode0();//Never Return
+  68   3                      }
+  69   2                      else if(Mode==1){//模式1，ASCII(随机)
+  70   3                              Mode1();//Never Return
+  71   3                      }
+  72   2                      else if(Mode==2){//模式2，数字图形(随机)
+  73   3                              Mode2();//Never Return
+  74   3                      }
+  75   2                      else if(Mode==3){//模式3，表情图形(随机)
+  76   3                              Mode3();//Never Return
+  77   3                      }
+  78   2                      else if(Mode==4){//模式4，图像图形(随机)
+  79   3                              Mode4();//Never Return
+  80   3                      }
+  81   2                      else if(Mode==5){//模式5，动态图形(+)(-)
+  82   3                              Mode5();//Never Return
+  83   3                      }
+  84   2                      else if(Mode==6){//模式6，动态数字(模式1--一直循环一个)(模式2--一个完成显示下一个)
+  85   3                              Mode6();//Never Return
+  86   3                      }
+  87   2                      else if(Mode==7){//模式7，两帧动画(+)(-)
+  88   3                              Mode7();//Never Return
+  89   3                      }
+  90   2                      else if(Mode==8){//模式8，四帧动画(+)(-)
+  91   3                              Mode8();//Never Return
+  92   3                      }
+  93   2                      else if(Mode==9){//模式9，六帧动画(+)(-)
+  94   3                              Mode9();//Never Return
+  95   3                      }
+  96   2                      else if(Mode==10){//模式10，DIY图形
+  97   3                              Mode10();//Never Return
+  98   3                      }
+  99   2                      else if(Mode==11){//模式11，DIY两帧动画
+ 100   3                              Mode11();//Never Return
+ 101   3                      }
+ 102   2                      else if(Mode==12){//模式12，DIY四帧动画
+ 103   3                              Mode12();//Never Return
+ 104   3                      }
+ 105   2                      else if(Mode==13){//模式13，DIY六帧动画
+ 106   3                              Mode13();//Never Return
+ 107   3                      }
+ 108   2                      else if(Mode==14){//模式14，走迷宫
+ 109   3                              Mode14();//Never Return
+ 110   3                      }
+ 111   2                      else if(Mode==15){//模式15,By 明
+ 112   3                              Mode15();//Never Return
+ 113   3                      }
+ 114   2              }
+ 115   1      }
+ 116          
+C51 COMPILER V7.06   MAIN                                                                  05/22/2009 12:41:49 PAGE 3   
+
+ 117          void DoWelcome(){//欢迎函数
+ 118   1              uchar tmp;
+ 119   1              uchar ascindex;
+ 120   1              tmp=PlayLED(Welcome,WELCOME_NUM,1,0,1,SPEED_LOW,ALWAYSSTAY);//不自动返回，等待按键
+ 121   1              if(tmp==1){//按键1，按4位开关获取模式
+ 122   2                      Mode=GetMode();//获取4位模式设定
+ 123   2              }
+ 124   1              else if(tmp==2){//按键2，随机产生模式
+ 125   2                      Mode= TL1 % 0x10;//通过Timer1的计数获取随机数，得到工作模式
+ 126   2                      if(Mode>9){
+ 127   3                              ascindex='A'-0x20-10+Mode;
+ 128   3                      }
+ 129   2                      else{
+ 130   3                              ascindex='0'-0x20+Mode;
+ 131   3                      }
+ 132   2                      for(tmp=0;tmp<200;tmp++)
+ 133   2                              Refresh(&MyFont[ascindex][0]);//显示产生的随机模式序号
+ 134   2              }
+ 135   1              else{
+ 136   2                      Mode=GetMode();//获取4位模式设定
+ 137   2              }
+ 138   1      }
+ 139          
+ 140          void Mode0(){//模式0，ASCII(+)(-)
+ 141   1              uchar skip=0;//按键越过判断变量
+ 142   1              uchar index=0x5F;
+ 143   1              while(1){
+ 144   2                      if(skip==0){//判断按键
+ 145   3                              if(Key1==0){
+ 146   4                                      if(index==0x5F){
+ 147   5                                              index=0;
+ 148   5                                      }
+ 149   4                                      else{
+ 150   5                                              index++;
+ 151   5                                      }
+ 152   4                                      skip=0x3F;
+ 153   4                              }
+ 154   3                              else if(Key2==0){
+ 155   4                                      if(index==0){
+ 156   5                                              index=0x5F;
+ 157   5                                      }
+ 158   4                                      else{
+ 159   5                                              index--;
+ 160   5                                      }
+ 161   4                                      skip=0x3F;
+ 162   4                              }
+ 163   3                      }
+ 164   2                      Refresh(&MyFont[index][0]);//刷新图形
+ 165   2                      if(skip!=0){//减小按键忽略计数
+ 166   3                              skip--;
+ 167   3                      }
+ 168   2              }
+ 169   1      }
+ 170          
+ 171          void Mode1(){//模式1，ASCII(随机)
+ 172   1              uchar skip=0;//按键越过判断变量
+ 173   1              uchar index=0x5F;
+ 174   1              while(1){
+ 175   2                      if(skip==0){//判断按键
+ 176   3                              if(Key1==0||Key2==0){
+ 177   4                                      index= TL1 %0x60;//通过Timer1的计数获取随机数
+ 178   4                                      skip=0x3F;
+C51 COMPILER V7.06   MAIN                                                                  05/22/2009 12:41:49 PAGE 4   
+
+ 179   4                              }
+ 180   3                      }
+ 181   2                      Refresh(&MyFont[index][0]);//刷新图形
+ 182   2                      if(skip!=0){//减小按键忽略计数
+ 183   3                              skip--;
+ 184   3                      }
+ 185   2              }
+ 186   1      }
+ 187          
+ 188          void Mode2(){//模式2，数字图形(随机)
+ 189   1              uchar skip=0;//按键越过判断变量
+ 190   1              uchar index=0;
+ 191   1              while(1){
+ 192   2                      if(skip==0){//判断按键
+ 193   3                              if(Key1==0||Key2==0){
+ 194   4                                      index= TL1 % NUMBERS_NUM;//通过Timer1的计数获取随机数
+ 195   4                                      skip=0x3F;
+ 196   4                              }
+ 197   3                      }
+ 198   2                      Refresh(&Numbers[index][0]);//刷新图形
+ 199   2                      if(skip!=0){//减小按键忽略计数
+ 200   3                              skip--;
+ 201   3                      }
+ 202   2              }
+ 203   1      }
+ 204          
+ 205          void Mode3(){//模式3，表情图形(随机)
+ 206   1              uchar skip=0;//按键越过判断变量
+ 207   1              uchar index=0;
+ 208   1              while(1){
+ 209   2              
+ 210   2                      if(skip==0){//判断按键
+ 211   3                              if(Key1==0||Key2==0){
+ 212   4                                      index= TL1 % MOOD_NUM;//通过Timer1的计数获取随机数
+ 213   4                                      skip=0x3F;
+ 214   4                              }
+ 215   3                      }
+ 216   2                      Refresh(&Mood[index][0]);//刷新图形
+ 217   2                      if(skip!=0){//减小按键忽略计数
+ 218   3                              skip--;
+ 219   3                      }
+ 220   2              }
+ 221   1      }
+ 222          
+ 223          void Mode4(){//模式4，图像图形(随机)
+ 224   1              uchar skip=0;//按键越过判断变量
+ 225   1              uchar index=0;
+ 226   1              while(1){
+ 227   2              
+ 228   2                      if(skip==0){//判断按键
+ 229   3                              if(Key1==0||Key2==0){
+ 230   4                                      index= TL1 % GRAPH_NUM;//通过Timer1的计数获取随机数
+ 231   4                                      skip=0x3F;
+ 232   4                              }
+ 233   3                      }
+ 234   2                      Refresh(&Graph[index][0]);//刷新图形
+ 235   2                      if(skip!=0){//减小按键忽略计数
+ 236   3                              skip--;
+ 237   3                      }
+ 238   2              }
+ 239   1      }
+ 240          
+C51 COMPILER V7.06   MAIN                                                                  05/22/2009 12:41:49 PAGE 5   
+
+ 241          void Mode5(){//模式5，动态图形(+)(-)
+ 242   1              uchar index=0;//按键越过判断变量
+ 243   1              uchar tmp;
+ 244   1              #define MODE5_NUMS 6
+ 245   1              while(1){
+ 246   2                      if(index==0)
+ 247   2                              tmp=PlayLED(Round,ROUND_NUM,1,0,0,SPEED_HIGH,ALWAYSSTAY);
+ 248   2                      else if(index==1)
+ 249   2                              tmp=PlayLED(Helix,HELIX_NUM,1,0,0,SPEED_HIGH,ALWAYSSTAY);
+ 250   2                      else if(index==2)
+ 251   2                              tmp=PlayLED(Note,NOTE_NUM,1,0,0,SPEED_HIGH,ALWAYSSTAY);
+ 252   2                      else if(index==3)
+ 253   2                              tmp=PlayLED(Heart,HEART_NUM,1,0,0,SPEED_HIGH,ALWAYSSTAY);
+ 254   2                      else if(index==4)
+ 255   2                              tmp=PlayLED(Stop,STOP_NUM,1,0,0,SPEED_HIGH,ALWAYSSTAY);
+ 256   2                      else if(index==5)
+ 257   2                              tmp=PlayLED(Wrong,WRONG_NUM,1,0,0,SPEED_HIGH,ALWAYSSTAY);
+ 258   2      
+ 259   2                      if(tmp==1){//按键1，下一个
+ 260   3                              if(index==MODE5_NUMS-1)
+ 261   3                                      index=0;
+ 262   3                              else
+ 263   3                                      index++;
+ 264   3                              MyDelay(1000);
+ 265   3                      }
+ 266   2                      else if(tmp==2){//按键2，重绘当前图形
+ 267   3                              /*
+ 268   3                              if(index==0)
+ 269   3                                      index=MODE5_NUMS-1;
+ 270   3                              else
+ 271   3                                      index--;
+ 272   3                              MyDelay(1000);
+ 273   3                              */
+ 274   3                      }
+ 275   2              }
+ 276   1      }
+ 277          
+ 278          void Mode6(){//模式6，动态数字(模式1--一直循环一个)(模式2--一个完成显示下一个)
+ 279   1              uchar index=0;
+ 280   1              uchar tmp;
+ 281   1              uchar staytimes=ALWAYSSTAY;
+ 282   1              #define MODE6_NUMS      10
+ 283   1              while(1){
+ 284   2                      if(index==0){
+ 285   3                              tmp=PlayLED(Number0,NUMBER0_NUM,1,0,1,SPEED_HIGH,staytimes);
+ 286   3                      }
+ 287   2                      else if(index==1){
+ 288   3                              tmp=PlayLED(Number1,NUMBER1_NUM,1,0,1,SPEED_HIGH,staytimes);
+ 289   3                      }
+ 290   2                      else if(index==2){
+ 291   3                              tmp=PlayLED(Number2,NUMBER2_NUM,1,0,1,SPEED_HIGH,staytimes);
+ 292   3                      }
+ 293   2                      else if(index==3){
+ 294   3                              tmp=PlayLED(Number3,NUMBER3_NUM,1,0,1,SPEED_HIGH,staytimes);
+ 295   3                      }
+ 296   2                      else if(index==4){
+ 297   3                              tmp=PlayLED(Number4,NUMBER4_NUM,1,0,1,SPEED_HIGH,staytimes);
+ 298   3                      }
+ 299   2                      else if(index==5){
+ 300   3                              tmp=PlayLED(Number5,NUMBER5_NUM,1,0,1,SPEED_HIGH,staytimes);
+ 301   3                      }
+ 302   2                      else if(index==6){
+C51 COMPILER V7.06   MAIN                                                                  05/22/2009 12:41:49 PAGE 6   
+
+ 303   3                              tmp=PlayLED(Number6,NUMBER6_NUM,1,0,1,SPEED_HIGH,staytimes);
+ 304   3                      }
+ 305   2                      else if(index==7){
+ 306   3                              tmp=PlayLED(Number7,NUMBER7_NUM,1,0,1,SPEED_HIGH,staytimes);
+ 307   3                      }
+ 308   2                      else if(index==8){
+ 309   3                              tmp=PlayLED(Number8,NUMBER8_NUM,1,0,1,SPEED_HIGH,staytimes);
+ 310   3                      }
+ 311   2                      else if(index==9){
+ 312   3                              tmp=PlayLED(Number9,NUMBER9_NUM,1,0,1,SPEED_HIGH,staytimes);
+ 313   3                      }
+ 314   2      
+ 315   2                      if(tmp==1){//一直显示一个数字，动态完成后静止
+ 316   3                              staytimes=ALWAYSSTAY;
+ 317   3                              MyDelay(1000);
+ 318   3                      }
+ 319   2                      else if(tmp==2){//一个数字刷完显示下一个
+ 320   3                              staytimes=STAYTIMES;
+ 321   3                              MyDelay(1000);
+ 322   3                      }
+ 323   2                      else{
+ 324   3                              if(index==MODE6_NUMS-1){
+ 325   4                                      index=0;
+ 326   4                              }
+ 327   3                              else{
+ 328   4                                      index++;
+ 329   4                              }
+ 330   3                      }
+ 331   2              }
+ 332   1      }
+ 333          
+ 334          void Mode7(){//模式7，两帧动画(+)(-)
+ 335   1              uchar index=0;
+ 336   1              uchar tmp;
+ 337   1              while(1){
+ 338   2                      tmp=PlayLED(Play2Frame[index],2,0,0,1,SPEED_LOW,ALWAYSSTAY);
+ 339   2                      if(tmp==1){
+ 340   3                              if(index==PLAYLED_NUM2-1)
+ 341   3                                      index=0;
+ 342   3                              else
+ 343   3                                      index++;
+ 344   3                              MyDelay(30000);
+ 345   3                      }
+ 346   2                      else if(tmp==2){
+ 347   3                              if(index==0)
+ 348   3                                      index=PLAYLED_NUM2-1;
+ 349   3                              else
+ 350   3                                      index--;
+ 351   3                              MyDelay(30000);
+ 352   3                      }
+ 353   2              }
+ 354   1      }
+ 355          
+ 356          void Mode8(){//模式8，四帧动画(+)(-)
+ 357   1              uchar index=0;
+ 358   1              uchar tmp;
+ 359   1              while(1){
+ 360   2                      tmp=PlayLED(Play4Frame[index],4,0,0,1,SPEED_LOW,ALWAYSSTAY);
+ 361   2                      if(tmp==1){
+ 362   3                              if(index==PLAYLED_NUM4-1)
+ 363   3                                      index=0;
+ 364   3                              else
+C51 COMPILER V7.06   MAIN                                                                  05/22/2009 12:41:49 PAGE 7   
+
+ 365   3                                      index++;
+ 366   3                              MyDelay(30000);
+ 367   3                      }
+ 368   2                      else if(tmp==2){
+ 369   3                              if(index==0)
+ 370   3                                      index=PLAYLED_NUM4-1;
+ 371   3                              else
+ 372   3                                      index--;
+ 373   3                              MyDelay(30000);
+ 374   3                      }
+ 375   2              }
+ 376   1      }
+ 377          
+ 378          void Mode9(){//模式9，六帧动画(+)(-)
+ 379   1              uchar index=0;
+ 380   1              uchar tmp;
+ 381   1              while(1){
+ 382   2                      tmp=PlayLED(Play6Frame[index],6,0,0,1,SPEED_LOW,ALWAYSSTAY);
+ 383   2                      if(tmp==1){
+ 384   3                              if(index==PLAYLED_NUM6-1)
+ 385   3                                      index=0;
+ 386   3                              else
+ 387   3                                      index++;
+ 388   3                              MyDelay(30000);
+ 389   3                      }
+ 390   2                      else if(tmp==2){
+ 391   3                              if(index==0)
+ 392   3                                      index=PLAYLED_NUM6-1;
+ 393   3                              else
+ 394   3                                      index--;
+ 395   3                              MyDelay(30000);
+ 396   3                      }
+ 397   2              }
+ 398   1      }
+ 399          
+ 400          void Mode10(){//模式10，DIY图形
+ 401   1              uchar i;
+ 402   1              for(i=0;i<8;i++){
+ 403   2                      BufferLED[i]=0;//初始化缓冲
+ 404   2              }
+ 405   1              SetupBuf();
+ 406   1              MyDelay(30000);
+ 407   1              while(1){
+ 408   2                      if(Key1==0||Key2==0){
+ 409   3                              MyDelay(30000);
+ 410   3                              SetupBuf();
+ 411   3                              MyDelay(30000);
+ 412   3                      }
+ 413   2                      Refresh(BufferLED);//刷新
+ 414   2              }
+ 415   1      }
+ 416          
+ 417          void Mode11(){//模式11，DIY两帧动画
+ 418   1              #define FRAME2 2
+ 419   1              uchar i,j,freshtmp,ascindex,tmp;
+ 420   1              while(1){
+ 421   2                      for(j=0;j<FRAME2;j++){
+ 422   3                              ascindex='1'-0x20+j;
+ 423   3                              for(freshtmp=0;freshtmp<200;freshtmp++)
+ 424   3                                      Refresh(&MyFont[ascindex][0]);//显示要设置的帧号
+ 425   3                              for(i=0;i<8;i++){
+ 426   4                                      BufferLED[i]=0;//初始化缓冲
+C51 COMPILER V7.06   MAIN                                                                  05/22/2009 12:41:49 PAGE 8   
+
+ 427   4                              }
+ 428   3                              SetupBuf();
+ 429   3                              for(i=0;i<8;i++){
+ 430   4                                      PlayBuf[j][i]=BufferLED[i];//把帧缓冲存入动画缓冲区
+ 431   4                              }
+ 432   3                      }
+ 433   2                      MyDelay(30000);
+ 434   2                      while(1){
+ 435   3                              tmp=PlayLED(PlayBuf,FRAME2,0,0,1,SPEED_LOW,ALWAYSSTAY);
+ 436   3                              if(tmp==2)break;//按下按键2，重新设定
+ 437   3                      }
+ 438   2              }
+ 439   1      }
+ 440          
+ 441          void Mode12(){//模式12，DIY四帧动画
+ 442   1              #define FRAME4 4
+ 443   1              uchar i,j,freshtmp,ascindex,tmp;
+ 444   1              while(1){
+ 445   2                      for(j=0;j<FRAME4;j++){
+ 446   3                              ascindex='1'-0x20+j;
+ 447   3                              for(freshtmp=0;freshtmp<200;freshtmp++)
+ 448   3                                      Refresh(&MyFont[ascindex][0]);//显示要设置的帧号
+ 449   3                              for(i=0;i<8;i++){
+ 450   4                                      BufferLED[i]=0;//初始化缓冲
+ 451   4                              }
+ 452   3                              SetupBuf();
+ 453   3                              for(i=0;i<8;i++){
+ 454   4                                      PlayBuf[j][i]=BufferLED[i];//把帧缓冲存入动画缓冲区
+ 455   4                              }
+ 456   3                      }
+ 457   2                      MyDelay(30000);
+ 458   2                      while(1){
+ 459   3                              tmp=PlayLED(PlayBuf,FRAME4,0,0,1,SPEED_LOW,ALWAYSSTAY);
+ 460   3                              if(tmp==2)break;//按下按键2，重新设定
+ 461   3                      }
+ 462   2              }
+ 463   1      }
+ 464          
+ 465          void Mode13(){//模式13，DIY六帧动画
+ 466   1              #define FRAME6 6
+ 467   1              uchar i,j,freshtmp,ascindex,tmp;
+ 468   1              while(1){
+ 469   2                      for(j=0;j<FRAME6;j++){
+ 470   3                              ascindex='1'-0x20+j;
+ 471   3                              for(freshtmp=0;freshtmp<200;freshtmp++)
+ 472   3                                      Refresh(&MyFont[ascindex][0]);//显示要设置的帧号
+ 473   3                              for(i=0;i<8;i++){
+ 474   4                                      BufferLED[i]=0;//初始化缓冲
+ 475   4                              }
+ 476   3                              SetupBuf();
+ 477   3                              for(i=0;i<8;i++){
+ 478   4                                      PlayBuf[j][i]=BufferLED[i];//把帧缓冲存入动画缓冲区
+ 479   4                              }
+ 480   3                      }
+ 481   2                      MyDelay(30000);
+ 482   2                      while(1){
+ 483   3                              tmp=PlayLED(PlayBuf,FRAME6,0,0,1,SPEED_LOW,ALWAYSSTAY);
+ 484   3                              if(tmp==2)break;//按下按键2，重新设定
+ 485   3                      }
+ 486   2              }
+ 487   1      }
+ 488          
+C51 COMPILER V7.06   MAIN                                                                  05/22/2009 12:41:49 PAGE 9   
+
+ 489          void Mode14(){//模式14，走迷宫
+ 490   1              uchar i,tmp;
+ 491   1              char x,y;//走迷宫者的坐标
+ 492   1              uchar skip=0;
+ 493   1              uchar LastDer=0;//上次的移动方向
+ 494   1              uchar savedata;//保存正在修改的数据(因为需要闪烁)
+ 495   1              uchar FreshCnt=0;//刷新次数计数(用于判断闪烁)
+ 496   1              #define TIMES_ON        32      //亮的刷新次数
+ 497   1              #define TIMES_OFF       32      //灭的刷新次数
+ 498   1              #define TIMES_BLOCK     128     //堵住显示提示的刷新次数
+ 499   1              #define TIMES_OUT       250     //成功走出迷宫显示提示的刷新次数
+ 500   1              for(i=0;i<8;i++){
+ 501   2                      BufferLED[i]=Maze[i];//初始化为默认迷宫
+ 502   2              }
+ 503   1              x=0;//设定起始坐标x
+ 504   1              y=0;//设定起始坐标y
+ 505   1              savedata=BufferLED[x];//保存数据(闪烁会修改BufferLED)
+ 506   1              while(1){
+ 507   2                      if(skip==0){
+ 508   3                              BufferLED[x]=savedata;
+ 509   3                              if(Key1==0){//走迷宫
+ 510   4                                      SolveGo(x,y,LastDer);//获取可行走的方向
+ 511   4                                      if(GotoCnt==0){
+ 512   5                                              SolveGo(x,y,0);//获取可行走的方向
+ 513   5                                              if(GotoCnt==0){
+ 514   6                                                      for(i=0;i<TIMES_BLOCK;i++){
+ 515   7                                                              Refresh(&MyFont['B'-0x20][0]);//显示B(堵住...Block)
+ 516   7                                                      }
+ 517   6                                              }
+ 518   5                                              else{
+ 519   6                                                      tmp=TL1 % GotoCnt;//通过Timer1的计数获取随机可行走方向
+ 520   6                                                      if(Goto[tmp]==1){
+ 521   7                                                              x++;//向右
+ 522   7                                                      }
+ 523   6                                                      else if(Goto[tmp]==2){
+ 524   7                                                              y++;//向下
+ 525   7                                                      }
+ 526   6                                                      else if(Goto[tmp]==3){
+ 527   7                                                              x--;//向左
+ 528   7                                                      }
+ 529   6                                                      else if(Goto[tmp]==4){
+ 530   7                                                              y--;//向上
+ 531   7                                                      }
+ 532   6                                                      LastDer=Goto[tmp];
+ 533   6                                              }
+ 534   5                                      }
+ 535   4                                      else{
+ 536   5                                              tmp=TL1 % GotoCnt;//通过Timer1的计数获取随机可行走方向
+ 537   5                                              if(Goto[tmp]==1){
+ 538   6                                                      x++;//向右
+ 539   6                                              }
+ 540   5                                              else if(Goto[tmp]==2){
+ 541   6                                                      y++;//向下
+ 542   6                                              }
+ 543   5                                              else if(Goto[tmp]==3){
+ 544   6                                                      x--;//向左
+ 545   6                                              }
+ 546   5                                              else if(Goto[tmp]==4){
+ 547   6                                                      y--;//向上
+ 548   6                                              }
+ 549   5                                              LastDer=Goto[tmp];
+ 550   5                                      }
+C51 COMPILER V7.06   MAIN                                                                  05/22/2009 12:41:49 PAGE 10  
+
+ 551   4                                      if(x==7 && y==7){//判断是否成功走出迷宫
+ 552   5                                              for(i=0;i<TIMES_OUT;i++){
+ 553   6                                                      Refresh(&Mood[0x02][0]);//显示^_^
+ 554   6                                              }
+ 555   5                                      }
+ 556   4                                      if(x==0 && y==0){//判断是否回到原点
+ 557   5                                              for(i=0;i<TIMES_OUT;i++){
+ 558   6                                                      Refresh(&Mood[0x01][0]);//显示-_-
+ 559   6                                              }
+ 560   5                                      }
+ 561   4                                      skip=0x3F;
+ 562   4                              }
+ 563   3                              else if(Key2==0){//手工重设迷宫
+ 564   4                                      MyDelay(30000);
+ 565   4                                      SetupBuf();
+ 566   4                                      BufferLED[x]&=~(1<<y);//腾出当前坐标
+ 567   4                                      skip=0x3F;
+ 568   4                              }
+ 569   3                              savedata=BufferLED[x];
+ 570   3                      }
+ 571   2                      if(FreshCnt<TIMES_ON){
+ 572   3                              BufferLED[x]|=(1<<y);
+ 573   3                      }
+ 574   2                      else{
+ 575   3                              BufferLED[x]&=~(1<<y);
+ 576   3                      }
+ 577   2                      FreshCnt++;
+ 578   2                      if(FreshCnt>=TIMES_ON+TIMES_OFF){
+ 579   3                              FreshCnt=0;
+ 580   3                      }
+ 581   2                      Refresh(BufferLED);//刷新
+ 582   2                      if(skip!=0){//减小按键忽略计数
+ 583   3                              skip--;
+ 584   3                      }
+ 585   2              }
+ 586   1      }
+ 587          
+ 588          void Mode15(){//模式15,By 明
+ 589   1              uchar i;
+ 590   1              #define TIMES_ABOUT     128     //显示时间
+ 591   1              while(1){
+ 592   2                      for(i=0;i<TIMES_ABOUT;i++){
+ 593   3                              Refresh(&Graph[BY_INDEX][0]);//刷新图形
+ 594   3                      }
+ 595   2                      for(i=0;i<TIMES_ABOUT;i++){
+ 596   3                              Refresh(&Graph[MING_INDEX][0]);//刷新图形
+ 597   3                      }
+ 598   2              }
+ 599   1      }
+ 600          
+ 601          uchar GetMode(){
+ 602   1              uchar Mode;
+ 603   1              Mode=P3;
+ 604   1              Mode=Mode>>4;
+ 605   1              return Mode;
+ 606   1      }
+ 607          
+ 608          uchar PlayLED(const uchar figure[][8],const uchar num,uchar stop,uchar back,uchar drawret,uchar speed,ucha
+             -r staytimes){//用于显示刷新动态图形
+ 609   1      //const uchar figure[][8]  --  动态图形二维数组
+ 610   1      //const uchar num  --  包含图像个数
+ 611   1      //uchar stop  --  是否在刷新完停止在最后一帧
+C51 COMPILER V7.06   MAIN                                                                  05/22/2009 12:41:49 PAGE 11  
+
+ 612   1      //uchar back  --  是否在动态图形显示完后返回
+ 613   1      //uchar drawret  --  绘制图形时是否允许按键返回
+ 614   1      //uchar speed  --  变换速度
+ 615   1      //uchar staytimes  --  静态停留次数(为0时为无限次)
+ 616   1      //返回值：0 -- 正常返回，1 -- 按键1按下，2 -- 按键2按下
+ 617   1              uchar i,j;
+ 618   1              while(1){
+ 619   2                      for(i=0;i<num;i++){
+ 620   3                              for(j=0;j<speed;j++){
+ 621   4                                      Refresh(&figure[i][0]);
+ 622   4                                      if(Key1==0 && drawret)return 1;
+ 623   4                                      if(Key2==0 && drawret)return 2;
+ 624   4                              }
+ 625   3                      }
+ 626   2                      if(stop){
+ 627   3                              if(back){
+ 628   4                                      return 0;
+ 629   4                              }
+ 630   3                              else{
+ 631   4                                      break;
+ 632   4                              }
+ 633   3                      }
+ 634   2              }
+ 635   1              i=num-1;
+ 636   1              while(1){
+ 637   2                      Refresh(&figure[i][0]);
+ 638   2                      if(Key1==0)return 1;
+ 639   2                      if(Key2==0)return 2;
+ 640   2                      if(back)break;
+ 641   2                      if(staytimes>0){
+ 642   3                              staytimes--;
+ 643   3                              if(staytimes==0)break;
+ 644   3                      }
+ 645   2              }
+ 646   1              return 0;
+ 647   1      }
+ 648          
+ 649          void Refresh(const uchar figure[]){//本函数用于刷新8x8LED点阵，参数为长度8的数组
+ 650   1              uchar i;
+ 651   1              for(i=0;i<8;i++){//刷新图形
+ 652   2                      P2=0xFF;
+ 653   2                      P0=figure[i];
+ 654   2                      P2=~(1<<i);
+ 655   2                      MyDelay(100);
+ 656   2              }
+ 657   1      }
+ 658          
+ 659          void SetupBuf(){
+ 660   1              uchar i=0;
+ 661   1              uchar j=0;
+ 662   1              uchar tmp,data4;//修改数据用的变量
+ 663   1              uchar skip=0;
+ 664   1              uchar savedata;//保存正在修改的数据(因为需要闪烁)
+ 665   1              uchar FreshCnt=0;
+ 666   1              #define TIMES_ON        32
+ 667   1              #define TIMES_OFF       32
+ 668   1              savedata=BufferLED[0];
+ 669   1              while(1){
+ 670   2                      if(skip==0){
+ 671   3                              if(Key1==0){
+ 672   4                                      BufferLED[i]=savedata;//恢复保存数据
+ 673   4                                      if(j==1){
+C51 COMPILER V7.06   MAIN                                                                  05/22/2009 12:41:49 PAGE 12  
+
+ 674   5                                              j=0;
+ 675   5                                              i++;
+ 676   5                                              if(i==8)
+ 677   5                                                      return;
+ 678   5                                      }
+ 679   4                                      else{
+ 680   5                                              j++;
+ 681   5                                      }
+ 682   4                                      savedata=BufferLED[i];//保存下一个要修改的数据
+ 683   4                                      skip=0x3F;
+ 684   4                                      FreshCnt=0;
+ 685   4                              }
+ 686   3                              else if(Key2==0){
+ 687   4                                      BufferLED[i]=savedata;//恢复保存数据
+ 688   4                                      data4=GetMode();//获取4位开关
+ 689   4                                      if(j==1){
+ 690   5                                              data4=data4<<4;
+ 691   5                                              tmp=0x0F;
+ 692   5                                      }
+ 693   4                                      else{
+ 694   5                                              tmp=0xF0;
+ 695   5                                      }
+ 696   4                                      BufferLED[i]=(BufferLED[i] & tmp) | data4;
+ 697   4                                      if(j==1){
+ 698   5                                              j=0;
+ 699   5                                              i++;
+ 700   5                                              if(i==8)
+ 701   5                                                      return;
+ 702   5                                      }
+ 703   4                                      else{
+ 704   5                                              j++;
+ 705   5                                      }
+ 706   4                                      savedata=BufferLED[i];//保存下一个要修改的数据
+ 707   4                                      skip=0x3F;
+ 708   4                                      FreshCnt=0;
+ 709   4                              }
+ 710   3                      }
+ 711   2                      if(FreshCnt<TIMES_ON){
+ 712   3                              if(j==0){
+ 713   4                                      BufferLED[i]|=0x0F;
+ 714   4                              }
+ 715   3                              else{
+ 716   4                                      BufferLED[i]|=0xF0;
+ 717   4                              }
+ 718   3                      }
+ 719   2                      else{
+ 720   3                              if(j==0){
+ 721   4                                      BufferLED[i]&=0xF0;
+ 722   4                              }
+ 723   3                              else{
+ 724   4                                      BufferLED[i]&=0x0F;
+ 725   4                              }
+ 726   3                      }
+ 727   2                      FreshCnt++;
+ 728   2                      if(FreshCnt>=TIMES_ON+TIMES_OFF){
+ 729   3                              FreshCnt=0;
+ 730   3                      }
+ 731   2                      Refresh(BufferLED);//刷新
+ 732   2                      if(skip!=0){//减小按键忽略计数
+ 733   3                              skip--;
+ 734   3                      }
+ 735   2              }
+C51 COMPILER V7.06   MAIN                                                                  05/22/2009 12:41:49 PAGE 13  
+
+ 736   1      }
+ 737          
+ 738          void MyDelay(uint tm){
+ 739   1              uint i;
+ 740   1              for(i=0;i<tm;i++)
+ 741   1                      nop;
+ 742   1      }
+ 743          
+ 744          uchar CanGo(char x,char y){//判断坐标(x,y)是否可以走
+ 745   1              if(x<0||x>7)
+ 746   1                      return 0;//x越界
+ 747   1              if(y<0||y>7)
+ 748   1                      return 0;//y越界
+ 749   1              if(BufferLED[x]&(1<<y))
+ 750   1                      return 0;//有障碍
+ 751   1              else
+ 752   1                      return 1;//可通行
+ 753   1      }
+ 754          
+ 755          void SolveGo(char x,char y,uchar Last){//获取可行走的方向，参数Last为上次的移动方向
+ 756   1              GotoCnt=0;
+ 757   1              if(CanGo(x+1,y) && Last!=3){
+ 758   2                      Goto[GotoCnt++]=1;
+ 759   2              }
+ 760   1              if(CanGo(x,y+1) && Last!=4){
+ 761   2                      Goto[GotoCnt++]=2;
+ 762   2              }
+ 763   1              if(CanGo(x-1,y) && Last!=1){
+ 764   2                      Goto[GotoCnt++]=3;
+ 765   2              }
+ 766   1              if(CanGo(x,y-1) && Last!=2){
+ 767   2                      Goto[GotoCnt++]=4;
+ 768   2              }
+ 769   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   2742    ----
+   CONSTANT SIZE    =   3560    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     62      63
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
